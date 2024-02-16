@@ -52,15 +52,8 @@ for link in link_list:
     # seller_2 = s.find('a',id='sellerProfileTriggerId').get_text()
     image = s.find('img',class_='a-dynamic-image a-stretch-horizontal')
     description = s.find('div' ,id='productDescription').get_text()
-    short_description = s.find('ul',class_='a-unordered-list a-vertical a-spacing-mini')
+    short_description = s.find('ul',class_='a-unordered-list a-vertical a-spacing-mini').attrs
     counter +=1
-    product_list = {
-        'title':title,
-        'price':price,
-        'seller': seller_2,
-        'short_description':short_description,
-        # 'description': description
-    }
     print('getting it')
     worksheet.append_row([link,
                           title,
