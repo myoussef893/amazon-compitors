@@ -22,7 +22,7 @@ gc = gspread.service_account('bot_creds.json')
 sh = gc.open('amazon-scrapped-data by python')
 
 # Google Worksheets (products, sellers)
-worksheet = sh.worksheet('products')
+worksheet = sh.worksheet('Sheet3')
 sellers = sh.worksheet('sellers')
 
 # Queried records of the seller sheet.
@@ -33,12 +33,11 @@ print(sellers_records)
 link_list=[]
 
 
-# Looping in to all the seller fronts links that was add in the sheet, getting the products links that will be scrapped. 
+# Looping into all the seller front urls that was added in the sheet, getting the products urls that will be scrapped. 
 for row in sellers_records: 
+    print('Loading:Sellers Storefronts...')
     seller_store_front= row[0]
-    print(seller_store_front)
     store_pages = row[1]
-    print(store_pages)
     for page_number in range(int(store_pages)):
         main_page = seller_store_front+str(page_number)
         r = requests.get(main_page,headers=h).content
@@ -53,27 +52,38 @@ counter = 0 # a counter that was created just to log what the code is doing when
 
 for link in link_list:
     
-    print(f'working on linK:{counter} ')
+    print(f'working on product url :{counter} ')
     r = requests.get(link,headers=h).content
     s = BeautifulSoup(r,'html.parser')
 
     title = info_finder('span',"a-size-large product-title-word-break")
 
-    price = info_finder('span','a-price-whole')
+    price = info_finder('span','a-price-whole').replace('.\u200e','')
+    
+    # print(price.split())
+    
     seller_2 = s.find('a',id='sellerProfileTriggerId').get_text()
-    image = s.find('img',class_='a-dynamic-image a-stretch-horizontal')
+    
+    image = s.find('div',class_='imgTagWrapper').find_next('img')['src'].replace('AC_SY300_SX300','AC_SY900_SX900')# fetch the image src and make it bigger by changing the dimensions. 
+
     description = s.find('div' ,id='productDescription').get_text()
-    short_description = s.find('ul',class_='a-unordered-list a-vertical a-spacing-mini')
-    counter +=1
+
+    short_description = s.find('div',id='featurebullets_feature_div').find('ul',class_='a-unordered-list a-vertical a-spacing-mini')
+    
+    counter +=1 # a counter to get how many products have been scrapped. 
+    
     print(f'getting link number:{counter}')
+    
     worksheet.append_row([
                           str(datetime.now().today()),
                           link,
                           title,
-                          price,
+                          image,
+                          int(price),
                           seller_2,
                           description,
-                          image])
+                          str(short_description)
+                          ])
     
 
-print(f'Python finished scrapping {len(link_list)}')
+print(f'Python finished scrapping {len(link_list)} products')
